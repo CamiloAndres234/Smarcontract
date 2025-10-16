@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Contract Robot Simulator</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style id="app-style">
+    body {
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow-x: hidden;
+      background-size: 400% 400%;
+      animation: gradientAnimation 15s ease infinite;
+    }
+
+    @keyframes gradientAnimation {
+      0% { background-position: 0% 50% }
+      50% { background-position: 100% 50% }
+      100% { background-position: 0% 50% }
+    }
+
+    /* New circuit-line overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 25% 25%, #2de0ff22 1px, transparent 1px),
+        radial-gradient(circle at 75% 75%, #2de0ff22 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      animation: circuitPulse 4s infinite alternate;
+      z-index: -1;
+    }
+
+    @keyframes circuitPulse {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    .glow {
+      box-shadow: 0 0 25px rgba(66, 220, 255, 0.9);
+      animation: glowPulse 2s infinite alternate;
+    }
+
+    @keyframes glowPulse {
+      0% { box-shadow: 0 0 15px rgba(66, 220, 255, 0.7); }
+      100% { box-shadow: 0 0 25px rgba(66, 220, 255, 0.9); }
+    }
+
+    .grid-effect {
+      background-image: linear-gradient(rgba(45, 224, 255, 0.1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(45, 224, 255, 0.1) 1px, transparent 1px);
+      background-size: 30px 30px;
+      background-position: center center;
+    }
+
+    .robot-container {
+      height: 300px;
+      position: relative;
+    }
+
+    .robot {
+      width: 180px;
+      height: 220px;
+      transition: all 0.3s ease;
+      transform-origin: bottom center;
+    }
+
+    .robot-head {
+      width: 100px;
+      height: 80px;
+      background: linear-gradient(145deg, #3b3f51, #616375);
+      border-radius: 15px;
+      position: relative;
+      margin: 0 auto;
+      border: 2px solid #a0aec0;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .robot-head::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(rgba(255,255,255,0.15), transparent);
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+
+    .robot-eye {
+      width: 20px;
+      height: 20px;
+      background: #00ffe1;
+      border-radius: 50%;
+      position: absolute;
+      top: 25px;
+      transition: all 0.3s ease;
+      border: 2px solid #e2e8f0;
+      animation: blink 4s infinite;
+      box-shadow: 0 0 10px 2px #00ffe1;
+    }
+
+    .robot-eye.left {
+      left: 20px;
+    }
+
+    .robot-eye.right {
+      right: 20px;
+    }
+
+    .robot-mouth {
+      width: 40px;
+      height: 10px;
+      background: #e2e8f0;
+      position: absolute;
+      bottom: 15px;
+      left: 30px;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+
+    .robot-body {
+      width: 140px;
+      height: 120px;
+      background: linear-gradient(145deg, #00d4ff, #0081c9);
+      margin: 10px auto 0;
+      border-radius: 10px;
+      position: relative;
+      border: 2px solid #a0aec0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: robotBreathing 4s infinite ease-in-out;
+      overflow: hidden;
+    }
+
+    .robot-body::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(rgba(255,255,255,0.15), transparent);
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+
+    @keyframes robotBreathing {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    .robot-display {
+      width: 100px;
+      height: 60px;
+      background: #000;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38b2ac;
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      padding: 10px;
+      text-align: center;
+      border: 2px solid #718096;
+      opacity: 0.85;
+      transition: all 0.3s ease;
+      line-height: 1.4;
+      min-height: 80px;
+      max-width: 120px;
+      white-space: pre-wrap;
+    }
+
+    .robot-leg {
+      width: 20px;
+      height: 40px;
+      background: #2d3748;
+      position: absolute;
+      bottom: -40px;
+      border-radius: 0 0 5px 5px;
+      border: 1px solid #a0aec0;
+    }
+
+    .robot-leg.left {
+      left: 40px;
+    }
+
+    .robot-leg.right {
+      right: 40px;
+    }
+
+    .robot-arm {
+      width: 20px;
+      height: 70px;
+      background: #2d3748;
+      position: absolute;
+      top: 20px;
+      border-radius: 5px;
+      border: 1px solid #a0aec0;
+      transform-origin: top center;
+      transition: transform 0.5s ease;
+    }
+
+    .robot-arm.left {
+      left: -20px;
+      transform: rotate(15deg);
+    }
+
+    .robot-arm.right {
+      right: -20px;
+      transform: rotate(-15deg);
+    }
+
+    .light {
+      position: absolute;
+      border-radius: 50%;
+      background-color: rgba(56, 178, 172, 0.5);
+      filter: blur(10px);
+      animation: pulse 2s infinite alternate;
+    }
+
+    .light-1 {
+      width: 100px;
+      height: 100px;
+      top: -30px;
+      right: -20px;
+    }
+
+    .light-2 {
+      width: 70px;
+      height: 70px;
+      bottom: 10px;
+      left: -20px;
+    }
+
+    @keyframes blink {
+      0%, 48%, 52%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    @keyframes pulse {
+      from {
+        opacity: 0.4;
+      }
+      to {
+        opacity: 0.8;
+      }
+    }
+
+    .happy .robot-mouth {
+      height: 10px;
+      width: 40px;
+      border-radius: 0 0 20px 20px;
+      background: #7fff00;
+    }
+
+    .sad .robot-mouth {
+      height: 10px;
+      width: 40px;
+      border-radius: 20px 20px 0 0;
+      background: #ff4c4c;
+    }
+
+    .robot-shake {
+      animation: shake 0.5s;
+    }
+
+    .robot-success {
+      animation: success 1s;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    @keyframes success {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+      100% { transform: translateY(0); }
+    }
+
+    .info-tooltip {
+      position: relative;
+      display: inline-block;
+    }
+
+    .info-tooltip .tooltip-text {
+      visibility: hidden;
+      width: 250px;
+      background-color: #2d3748;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 10px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -125px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 0.9rem;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      border: 1px solid #4a5568;
+    }
+
+    .info-tooltip:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .token-input::-webkit-inner-spin-button,
+    .token-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .token-input {
+      -moz-appearance: textfield;
+    }
+
+    .container {
+      max-width: 800px;
+    }
+
+    .particle {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background-color: #38b2ac;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .container-glow {
+      box-shadow: 0 0 30px rgba(56, 178, 172, 0.6);
+      animation: containerGlowPulse 3s infinite alternate;
+    }
+
+    @keyframes containerGlowPulse {
+      0% { box-shadow: 0 0 20px rgba(56, 178, 172, 0.4); }
+      100% { box-shadow: 0 0 30px rgba(56, 178, 172, 0.8); }
+    }
+
+    /* Floating particles in background */
+    .bg-particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background-color: rgba(56, 178, 172, 0.6);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: floatUp 15s linear infinite;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.8; }
+      100% { transform: translateY(-50px) translateX(20px); opacity: 0; }
+    }
+
+    /* Sparkle effect */
+    .sparkle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background-color: white;
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @keyframes sparkle {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="bg-blue-900 text-white">
+  <div class="container mx-auto px-4 py-8 relative">
+    <div class="text-center mb-6">
+      <h1 class="text-3xl font-bold mb-2 text-blue-300">Simulador de Smart Contract</h1>
+      <p class="text-lg text-blue-200">Interactúa con el robot para aprender cómo funcionan los contratos inteligentes</p>
+    </div>
+
+    <div class="bg-gray-800 bg-opacity-70 rounded-xl p-6 grid-effect container-glow relative">
+      <div class="robot-container flex justify-center items-center mb-8">
+        <div class="robot" id="robot">
+          <div class="robot-head">
+            <div class="robot-eye left"></div>
+            <div class="robot-eye right"></div>
+            <div class="robot-mouth"></div>
+          </div>
+          <div class="robot-body">
+            <div class="robot-display" id="robot-display">Esperando tokens...</div>
+            <div class="robot-arm left"></div>
+            <div class="robot-arm right"></div>
+            <div class="robot-leg left"></div>
+            <div class="robot-leg right"></div>
+          </div>
+          <div class="light light-1"></div>
+          <div class="light light-2"></div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center justify-center space-y-4 mb-8">
+        <div class="bg-gray-900 p-4 rounded-lg glow w-full max-w-md">
+          <label for="tokenInput" class="block text-sm font-medium text-gray-300 mb-2">
+            <i class="fas fa-coins text-yellow-500 mr-2"></i> Tokens a enviar:
+          </label>
+          <div class="flex">
+            <input 
+              type="number" 
+              id="tokenInput" 
+              class="token-input bg-gray-700 text-white rounded-l-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+              min="1" 
+              placeholder="Ingresa una cantidad"
+              aria-label="Cantidad de tokens a enviar">
+            <button 
+              id="sendButton" 
+              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              disabled
+              aria-label="Enviar tokens">
+              <i class="fas fa-paper-plane mr-2"></i> Enviar
+            </button>
+          </div>
+          <p id="hint" class="text-xs text-gray-400 mt-2">Este Smart Contract requiere una cantidad específica para ser ejecutado.</p>
+        </div>
+      </div>
+
+      <div class="text-center p-4 bg-gray-900 bg-opacity-70 rounded-lg mb-6">
+        <p class="text-lg">
+          <i class="fas fa-robot text-blue-400 mr-2"></i>
+          Un Smart Contract es un programa que ejecuta reglas automáticamente sin intermediarios.
+          <span class="info-tooltip ml-2">
+            <i class="fas fa-info-circle text-blue-300 cursor-help"></i>
+            <span class="tooltip-text">
+              Los Smart Contracts son programas que se ejecutan exactamente como fueron diseñados, sin posibilidad de censura, caídas o interferencias de terceros. Funcionan en una blockchain y permiten transacciones confiables sin intermediarios.
+            </span>
+          </span>
+        </p>
+      </div>
+
+      <div class="bg-blue-800 bg-opacity-30 rounded-lg p-4">
+        <h2 class="text-xl font-bold mb-3"><i class="fas fa-lightbulb text-yellow-400 mr-2"></i>¿Cómo funciona este simulador?</h2>
+        <ol class="list-decimal list-inside space-y-2 text-blue-100">
+          <li>Ingresa un número de tokens en el campo de entrada.</li>
+          <li>Presiona el botón "Enviar" para interactuar con el Smart Contract.</li>
+          <li>El contrato (representado por el robot) verificará si la cantidad es exactamente 3.</li>
+          <li>Si es correcta, el contrato aprobará automáticamente la transacción.</li>
+          <li>Si no es correcta, rechazará la transacción (así de simple e inquebrantable).</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="text-center mt-6 text-sm text-blue-200">
+      <p>Una demostración educativa de Smart Contracts &copy; 2025</p>
+    </div>
+  </div>
+
+  <script id="app-script">
+    document.addEventListener('DOMContentLoaded', function() {
+      const tokenInput = document.getElementById('tokenInput');
+      const sendButton = document.getElementById('sendButton');
+      const robot = document.getElementById('robot');
+      const robotDisplay = document.getElementById('robot-display');
+      
+      // Sonidos
+      const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      const errorSound = new Audio('https://assets.mixkit.co/active_storage/sfx/948/948-preview.mp3');
+      
+      // Validar entrada
+      tokenInput.addEventListener('input', function() {
+        const value = parseInt(tokenInput.value);
+        sendButton.disabled = isNaN(value) || value <= 0;
+      });
+      
+      // Manejar envío
+      sendButton.addEventListener('click', function() {
+        const tokenAmount = parseInt(tokenInput.value);
+        
+        // Resetear estado del robot
+        robot.classList.remove('happy', 'sad', 'robot-shake', 'robot-success');
+        
+        // Simular procesamiento
+        robotDisplay.textContent = "Procesando...";
+        robotDisplay.style.color = '#ffffff';
+        
+        setTimeout(() => {
+          if (tokenAmount === 3) {
+            // Transacción correcta
+            successSound.play();
+            robotDisplay.textContent = "✅ Transacción aprobada.\nAquí está tu recompensa.";
+            robotDisplay.style.color = '#4ade80';
+            robot.classList.add('happy', 'robot-success');
+            createParticles();
+          } else {
+            // Transacción incorrecta
+            errorSound.play();
+            robotDisplay.textContent = "❌ Transacción rechazada.\nNo cumple las condiciones del contrato.";
+            robotDisplay.style.color = '#f87171';
+            robot.classList.add('sad', 'robot-shake');
+          }
+        }, 800);
+      });
+      
+      // Crear partículas para efecto de éxito
+      function createParticles() {
+        const robotRect = robot.getBoundingClientRect();
+        const centerX = robotRect.left + robotRect.width / 2;
+        const centerY = robotRect.top + robotRect.height / 2;
+        
+        for (let i = 0; i < 15; i++) {
+          createParticle(centerX, centerY);
+        }
+      }
+      
+      function createParticle(x, y) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        document.body.appendChild(particle);
+        
+        // Posición inicial
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        
+        // Animación
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 50 + Math.random() * 100;
+        const duration = 1000 + Math.random() * 1000;
+        
+        // Animar
+        const startTime = Date.now();
+        
+        function animate() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          const currentX = x + Math.cos(angle) * distance * progress;
+          const currentY = y + Math.sin(angle) * distance * progress;
+          
+          particle.style.left = currentX + 'px';
+          particle.style.top = currentY + 'px';
+          particle.style.opacity = 1 - progress;
+          
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            particle.remove();
+          }
+        }
+        
+        requestAnimationFrame(animate);
+        particle.style.opacity = 1;
+      }
+      
+      // Accesibilidad - permitir activar el botón con Enter cuando el input está enfocado
+      tokenInput.addEventListener('keyup', function(event) {
+        if (event.key === 'Enter' && !sendButton.disabled) {
+          sendButton.click();
+        }
+      });
+      
+      // Create background particles
+      function createBackgroundParticles() {
+        const container = document.querySelector('.container');
+        for (let i = 0; i < 20; i++) {
+          setTimeout(() => {
+            const particle = document.createElement('div');
+            particle.className = 'bg-particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDuration = (10 + Math.random() * 20) + 's';
+            container.appendChild(particle);
+            
+            // Remove particle after animation completes
+            setTimeout(() => {
+              particle.remove();
+              createBackgroundParticle();
+            }, 15000);
+          }, i * 200);
+        }
+      }
+
+      function createBackgroundParticle() {
+        const container = document.querySelector('.container');
+        const particle = document.createElement('div');
+        particle.className = 'bg-particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDuration = (10 + Math.random() * 20) + 's';
+        container.appendChild(particle);
+        
+        // Remove particle after animation completes
+        setTimeout(() => {
+          particle.remove();
+          createBackgroundParticle();
+        }, 15000);
+      }
+
+      // Create sparkle effect on robot success
+      function createSparkles() {
+        const robotBody = document.querySelector('.robot-body');
+        const robotRect = robotBody.getBoundingClientRect();
+        
+        for (let i = 0; i < 10; i++) {
+          setTimeout(() => {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = (Math.random() * robotRect.width) + 'px';
+            sparkle.style.top = (Math.random() * robotRect.height) + 'px';
+            sparkle.style.animation = 'sparkle 0.5s forwards';
+            robotBody.appendChild(sparkle);
+            
+            setTimeout(() => sparkle.remove(), 500);
+          }, i * 100);
+        }
+      }
+
+      // Modify success handler to add sparkles
+      const originalCreateParticles = createParticles;
+      createParticles = function() {
+        originalCreateParticles();
+        createSparkles();
+      };
+
+      // Initialize background particles
+      createBackgroundParticles();
+    });
+  </script>
+</body>
+</html>
